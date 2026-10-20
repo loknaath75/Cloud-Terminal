@@ -1,0 +1,190 @@
+================================================================================
+EXPERIMENT 9 — IMPLEMENTATION OF PARALLEL PROCESSING USING MPI AND OPENMP
+================================================================================
+
+================================================================================
+Part A — MPI (Message Passing Interface)
+================================================================================
+
+Step 1: Install the required packages
+--------------------------------------------------------------------------------
+sudo apt update
+sudo apt install python3 python3-pip mpich -y
+python3 -m pip install mpi4py
+sudo apt install libopenmpi-dev openmpi-bin -y
+
+Note: MPICH and OpenMPI rendu packages-um install pannina MPI implementation
+conflict varalaam. Lab system-la mpirun already work aaguthu na, atha check
+pannitu same MPI implementation use pannurathu better.
+
+
+Step 2: Create the MPI program
+--------------------------------------------------------------------------------
+Create the file:
+nano mpi_example.py
+
+Paste this code:
+
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+
+print(f"Hello from process {rank} out of {size}")
+
+Save using: Ctrl + O -> Enter -> Ctrl + X.
+
+
+Step 3: Execute the MPI program
+--------------------------------------------------------------------------------
+First try one process:
+mpirun -np 1 python3 mpi_example.py
+
+Expected output:
+Hello from process 0 out of 1
+
+
+Then try two processes:
+mpirun --oversubscribe -np 2 python3 mpi_example.py
+
+Expected output (order may vary):
+Hello from process 0 out of 2
+Hello from process 1 out of 2
+
+Explanation:
+-np 2 means two MPI processes. rank identifies each process, and size gives the
+total number of processes.
+
+
+================================================================================
+Part B — OpenMP (Shared Memory Parallelism)
+================================================================================
+OpenMP uses threads to execute parts of a program in parallel.
+
+Step 4: Install the compiler
+--------------------------------------------------------------------------------
+sudo apt update
+sudo apt install g++ build-essential -y
+
+
+Program 1: OpenMP Hello World
+--------------------------------------------------------------------------------
+Create a file:
+nano hello_omp.cpp
+
+Paste this code:
+
+#include <omp.h>
+#include <iostream>
+using namespace std;
+
+int main() {
+    omp_set_num_threads(4);
+
+    #pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
+        int total_threads = omp_get_num_threads();
+
+        cout << "Hello world from thread "
+             << thread_id << " out of "
+             << total_threads << " threads." << endl;
+    }
+
+    return 0;
+}
+
+Compile and run:
+g++ -fopenmp hello_omp.cpp -o hello_omp.out
+./hello_omp.out
+
+Expected output (thread order may vary):
+Hello world from thread 0 out of 4 threads.
+Hello world from thread 1 out of 4 threads.
+Hello world from thread 2 out of 4 threads.
+Hello world from thread 3 out of 4 threads.
+
+
+Program 2: Loop-level parallelism with reduction
+--------------------------------------------------------------------------------
+This example calculates the sum of numbers from 1 to 100.
+
+Create:
+nano loop_parallel.cpp
+
+Paste:
+
+#include <omp.h>
+#include <iostream>
+using namespace std;
+
+int main() {
+    int sum = 0;
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 1; i <= 100; i++) {
+        sum += i;
+    }
+
+    cout << "Parallel Sum: " << sum << endl;
+
+    return 0;
+}
+
+Compile and run:
+g++ -fopenmp loop_parallel.cpp -o loop_parallel.out
+./loop_parallel.out
+
+Expected output:
+Parallel Sum: 5050
+
+Explanation:
+The reduction(+:sum) clause gives each thread a private partial sum and
+combines those partial sums at the end.
+
+
+Program 3: Critical section
+--------------------------------------------------------------------------------
+This program demonstrates how a critical section protects a shared variable
+from simultaneous updates.
+
+Create:
+nano critical.cpp
+
+Paste:
+
+#include <omp.h>
+#include <iostream>
+using namespace std;
+
+int main() {
+    int total_sum = 0;
+
+    #pragma omp parallel for
+    for (int i = 0; i < 1000; i++) {
+        int local_sum = i;
+
+        #pragma omp critical
+        {
+            total_sum += local_sum;
+        }
+    }
+
+    cout << "Total sum: " << total_sum << endl;
+
+    return 0;
+}
+
+Compile and run:
+g++ -fopenmp critical.cpp -o critical.out
+./critical.out
+
+Expected output:
+Total sum: 499500
+
+================================================================================
+RESULT:
+Thus, parallel processing programs were successfully implemented and executed
+using MPI and OpenMP.
+================================================================================
