@@ -1,0 +1,154 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+    "name": "Cloud Lab - Ex 2B Student REST API & Third-Party API",
+    "description": "Postman Collection for Experiment 2B:\n1. Student CRUD REST API (Express.js on Port 5000)\n2. Third-Party Cloud Weather API Integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Part 1 - Student CRUD API (Local)",
+      "item": [
+        {
+          "name": "1. POST - Add Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Loknaath\",\n  \"age\": 20,\n  \"department\": \"CSE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/student",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["student"]
+            },
+            "description": "Creates a new student record."
+          },
+          "response": []
+        },
+        {
+          "name": "2. GET - Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/student",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["student"]
+            },
+            "description": "Retrieves all students array."
+          },
+          "response": []
+        },
+        {
+          "name": "3. PUT - Update Student by Name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"age\": 21,\n  \"department\": \"IT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/student/Loknaath",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["student", "Loknaath"]
+            },
+            "description": "Updates student record."
+          },
+          "response": []
+        },
+        {
+          "name": "4. DELETE - Delete Student by Name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/student/Loknaath",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["student", "Loknaath"]
+            },
+            "description": "Removes a student record."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Part 2 - Third-Party Cloud APIs",
+      "item": [
+        {
+          "name": "1. Third-Party Live Weather API (Open-Meteo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.open-meteo.com/v1/forecast?latitude=9.9252&longitude=78.1198&current_weather=true",
+              "protocol": "https",
+              "host": ["api", "open-meteo", "com"],
+              "path": ["v1", "forecast"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "9.9252",
+                  "description": "Madurai Latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "78.1198",
+                  "description": "Madurai Longitude"
+                },
+                {
+                  "key": "current_weather",
+                  "value": "true",
+                  "description": "Fetch real-time weather metrics"
+                }
+              ]
+            },
+            "description": "Public Third-Party Cloud Weather API (no API key required)."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Third-Party Public Profile API (GitHub)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.github+json"
+              }
+            ],
+            "url": {
+              "raw": "https://api.github.com/users/octocat",
+              "protocol": "https",
+              "host": ["api", "github", "com"],
+              "path": ["users", "octocat"]
+            },
+            "description": "Public GitHub REST API for developer profiles."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

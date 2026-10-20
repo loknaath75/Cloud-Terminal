@@ -1,0 +1,22 @@
+{
+  "name": "ex.2b",
+  "version": "1.0.0",
+  "description": "Student REST API with CRUD operations tested using Postman (Experiment 2B)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "express",
+    "postman",
+    "crud",
+    "rest-api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
