@@ -1,0 +1,156 @@
+================================================================================
+EXPERIMENT 10 — APACHE SPARK INSTALLATION & WORDCOUNT EXECUTION
+================================================================================
+
+Step 1 — Check Java and Scala
+--------------------------------------------------------------------------------
+Ubuntu Terminal open pannu.
+
+java -version
+scala -version
+
+Java install aagala na:
+sudo apt update
+sudo apt install default-jdk -y
+
+Scala install aagala na:
+sudo apt install scala -y
+
+Check Spark already installed-ah:
+spark-shell --version
+
+If spark-shell command not found, continue with Step 2.
+
+
+Step 2 — Download and install Apache Spark
+--------------------------------------------------------------------------------
+Your manual uses /usr/local/spark as the installation directory.
+First check whether that folder already exists:
+
+ls /usr/local/spark/bin/spark-shell
+
+If the file exists, skip to Step 3.
+
+Otherwise, download a Spark release compatible with your installed Hadoop
+version from the official Apache Spark downloads page:
+https://spark.apache.org/downloads.html
+
+After downloading the .tgz file, extract it. For example, if the file is in Downloads:
+cd ~/Downloads
+tar -xzf spark-*.tgz
+
+Move the extracted Spark folder to /usr/local/spark using the actual extracted folder name:
+sudo mv spark-<extracted-folder-name> /usr/local/spark
+
+(Replace <extracted-folder-name> with the real folder name; don't type angle brackets).
+
+
+Step 3 — Configure Spark PATH
+--------------------------------------------------------------------------------
+Open the Bash configuration:
+nano ~/.bashrc
+
+Add this line at the bottom:
+export SPARK_HOME=/usr/local/spark
+export PATH=$PATH:$SPARK_HOME/bin
+
+Save using: Ctrl + O -> Enter -> Ctrl + X.
+
+Apply the changes:
+source ~/.bashrc
+
+Verify:
+spark-shell --version
+
+
+Step 4 — Start Spark Shell
+--------------------------------------------------------------------------------
+Run:
+spark-shell
+
+If installation is successful, the Scala prompt appears:
+scala>
+
+This is where you'll execute the Spark WordCount program from your manual.
+
+
+Step 5 — Create the input file
+--------------------------------------------------------------------------------
+Open a second terminal window and run:
+mkdir -p ~/spark_lab
+cd ~/spark_lab
+nano input.txt
+
+Paste this sample text from the manual:
+In as name to here them deny wise this. As rapid woody my he me which. Men but they fail shew just wish next put. Led all visitor musical calling nor her. Within coming figure sex things are. Pretended concluded did repulsive education smallness yet yet described. Had countryman his pressed shewing. No gate dare rose he. Eyes year if miss he as upon.
+
+Save the file.
+
+
+Step 6 — Execute the Spark WordCount program
+--------------------------------------------------------------------------------
+Return to the terminal running spark-shell. At the scala> prompt, type each command one by one:
+
+1. Read the input file:
+val inputfile = sc.textFile("file:///home/YOUR_USERNAME/spark_lab/input.txt")
+
+(Replace YOUR_USERNAME with your Ubuntu username. To find it, run 'whoami' in the other terminal).
+
+2. Split the text into words and count them:
+val counts = inputfile.flatMap(line => line.split("\\s+")).map(word => (word, 1)).reduceByKey(_ + _)
+
+3. Display the word counts:
+counts.collect().foreach(println)
+
+The output will show word-count pairs, such as:
+(fail,1)
+(men,1)
+...
+
+Explanation:
+- flatMap operation splits lines into words.
+- map creates (word, 1) pairs.
+- reduceByKey adds the counts for matching words.
+
+
+Step 7 — Save the output
+--------------------------------------------------------------------------------
+At the scala> prompt:
+counts.saveAsTextFile("file:///home/YOUR_USERNAME/spark_lab/output")
+
+(Replace YOUR_USERNAME with your actual username).
+
+Note: If you run it again, delete or rename the existing output directory first;
+Spark won't overwrite it automatically.
+
+Exit Spark Shell:
+:quit
+
+In your normal terminal, display the results:
+ls ~/spark_lab/output
+cat ~/spark_lab/output/part-00000
+
+
+Step 8 — If your examiner specifically asks for HDFS
+--------------------------------------------------------------------------------
+If Hadoop is already running, use HDFS for input and output instead.
+
+In a normal terminal:
+hdfs dfs -mkdir -p /user/$USER/spark_lab/input
+hdfs dfs -put ~/spark_lab/input.txt /user/$USER/spark_lab/input/
+
+Then, in spark-shell, execute:
+val inputfile = sc.textFile("hdfs://localhost:9000/user/YOUR_USERNAME/spark_lab/input/input.txt")
+val counts = inputfile.flatMap(line => line.split("\\s+")).map(word => (word, 1)).reduceByKey(_ + _)
+counts.saveAsTextFile("hdfs://localhost:9000/user/YOUR_USERNAME/spark_lab/output")
+
+(Replace YOUR_USERNAME with your Ubuntu username).
+
+View the output in a normal terminal:
+hdfs dfs -cat /user/$USER/spark_lab/output/part-00000
+
+================================================================================
+RESULT:
+Thus, Apache Spark was installed and configured, and the WordCount program was
+executed successfully using Spark Shell on both local storage and HDFS.
+================================================================================
