@@ -1,0 +1,306 @@
+================================================================================
+EXPERIMENT 8 — HADOOP INSTALLATION & MAPREDUCE WORD COUNT EXECUTION
+================================================================================
+
+================================================================================
+Part 1 — Install Hadoop on a Single Node Cluster
+================================================================================
+Environment:
+Ubuntu VM · Java 11 · Hadoop 3.3.6 · Terminal
+
+First, Ubuntu VM open pannu. Ella commands-um Terminal-la run pannanum.
+Commands-a one by one copy-paste pannu.
+
+--------------------------------------------------------------------------------
+Step 1. Update Ubuntu and install SSH
+--------------------------------------------------------------------------------
+sudo apt update
+sudo apt install openssh-server openssh-client -y
+
+--------------------------------------------------------------------------------
+Step 2. Install Java 11
+--------------------------------------------------------------------------------
+sudo apt install openjdk-11-jdk -y
+
+Check Java:
+java -version
+
+Java path kandupidikka:
+dirname $(dirname $(readlink -f $(which java)))
+
+Usually Ubuntu-la path:
+/usr/lib/jvm/java-11-openjdk-amd64
+
+Un system-la command return pannura path-thaan correct.
+
+--------------------------------------------------------------------------------
+Step 3. Download and extract Hadoop
+--------------------------------------------------------------------------------
+cd ~
+wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+tar -xzf hadoop-3.3.6.tar.gz
+mv hadoop-3.3.6 hadoop
+
+Check:
+ls ~/hadoop
+
+bin, etc, lib, sbin, share folders theriyanum.
+
+--------------------------------------------------------------------------------
+Step 4. Configure environment variables
+--------------------------------------------------------------------------------
+Terminal-la:
+nano ~/.bashrc
+
+File-oda bottom-la intha lines add pannu:
+
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+export HADOOP_HOME=$HOME/hadoop
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export HADOOP_YARN_HOME=$HADOOP_HOME
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+Save: Ctrl + O -> Enter -> Ctrl + X.
+
+Apply:
+source ~/.bashrc
+
+Check:
+echo $JAVA_HOME
+echo $HADOOP_HOME
+hadoop version
+
+Hadoop version output vanthaa installation files correct-ah irukku.
+
+--------------------------------------------------------------------------------
+Step 5. Configure Java in Hadoop
+--------------------------------------------------------------------------------
+Open:
+nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+
+Find JAVA_HOME and set it to your actual Java path. Example:
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+Save and exit.
+
+--------------------------------------------------------------------------------
+Step 6. Configure core-site.xml
+--------------------------------------------------------------------------------
+nano $HADOOP_HOME/etc/hadoop/core-site.xml
+
+<configuration> and </configuration> tags-kulla intha property add pannu:
+
+<property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://localhost:9000</value>
+</property>
+
+--------------------------------------------------------------------------------
+Step 7. Configure hdfs-site.xml
+--------------------------------------------------------------------------------
+nano $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+
+Single-node cluster-ku intha configuration use pannu:
+
+<property>
+    <name>dfs.replication</name>
+    <value>1</value>
+</property>
+<property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///home/USERNAME/hadoop/data/namenode</value>
+</property>
+<property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:///home/USERNAME/hadoop/data/datanode</value>
+</property>
+
+Important: USERNAME-a un Ubuntu username-a vechu replace pannanum.
+Example username 'osboxes' na /home/osboxes/hadoop/... nu podu.
+Single-node setup-ku replication 1 use pannurathu practical, because only 1 DataNode irukkum.
+
+Create the directories:
+mkdir -p ~/hadoop/data/namenode
+mkdir -p ~/hadoop/data/datanode
+
+--------------------------------------------------------------------------------
+Step 8. Configure MapReduce and YARN
+--------------------------------------------------------------------------------
+Open mapred-site.xml:
+nano $HADOOP_HOME/etc/hadoop/mapred-site.xml
+
+<configuration> tags-kulla:
+<property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+</property>
+
+Next:
+nano $HADOOP_HOME/etc/hadoop/yarn-site.xml
+
+Add:
+<property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+</property>
+
+Save all files.
+
+--------------------------------------------------------------------------------
+Step 9. Set up passwordless SSH
+--------------------------------------------------------------------------------
+Run:
+ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+Test:
+ssh localhost
+
+First time confirmation ketta 'yes' type pannu. Password ketkaama login aana setup correct.
+Thirumba normal terminal-ku vara:
+exit
+
+--------------------------------------------------------------------------------
+Step 10. Format the NameNode
+--------------------------------------------------------------------------------
+First-time setup-la mattum run pannu:
+hdfs namenode -format
+
+Successful formatting message varanum.
+Note: Existing Hadoop data irunthaa repeated-ah format pannadha; data erase aagalaam.
+
+--------------------------------------------------------------------------------
+Step 11. Start Hadoop services
+--------------------------------------------------------------------------------
+start-dfs.sh
+start-yarn.sh
+
+Check running processes:
+jps
+
+Expected processes:
+- NameNode
+- DataNode
+- SecondaryNameNode
+- ResourceManager
+- NodeManager
+- Jps
+
+jps-la ella Hadoop processes-um varalana, MapReduce-ku pogurathukku munnaadi error fix pannanum.
+
+Check HDFS:
+hdfs dfs -ls /
+
+Hadoop successfully start aana, HDFS commands execute aagum.
+
+
+================================================================================
+Part 2 — Execution of Sample MapReduce Problem (Word Count)
+================================================================================
+Intha experiment-ku Word Count program use pannuvom.
+Oru text file-la ovvoru word ethana thadavai varuthunu Hadoop count pannum.
+
+--------------------------------------------------------------------------------
+Step 12. Create the Java program
+--------------------------------------------------------------------------------
+Create a working folder:
+mkdir -p ~/wordcount
+cd ~/wordcount
+nano WordCount.java
+
+(Paste the Java code from WordCount.java)
+
+Main class name:
+public class WordCount
+
+File name-um WordCount.java-nu irukkanum.
+
+Program-la 3 important parts irukku:
+1. Mapper  — TokenizerMapper: Text-a words-ah split panni (word, 1) emit pannum.
+2. Reducer — IntSumReducer: Same word-ku vandha values ellathayum add panni total count calculate pannum.
+3. Driver  — main(): Job configure panni Mapper, Reducer, input path, output path set panni job execute pannum.
+
+Save: Ctrl + O -> Enter -> Ctrl + X.
+
+--------------------------------------------------------------------------------
+Step 13. Compile the Java program
+--------------------------------------------------------------------------------
+First Hadoop classpath set pannu:
+cd ~/wordcount
+export HADOOP_CLASSPATH=$(hadoop classpath)
+
+Create the class folder:
+mkdir wordcount_classes
+
+Compile:
+javac -classpath "$HADOOP_CLASSPATH" -d wordcount_classes WordCount.java
+
+Error illama command finish aana, compilation successful.
+
+--------------------------------------------------------------------------------
+Step 14. Create the JAR file
+--------------------------------------------------------------------------------
+jar -cvf wordcount.jar -C wordcount_classes/ .
+
+Check:
+ls
+
+WordCount.java, wordcount_classes, wordcount.jar irukkanum.
+
+--------------------------------------------------------------------------------
+Step 15. Create sample input
+--------------------------------------------------------------------------------
+Create input text:
+echo "hello hadoop hello world hadoop is fun" > input.txt
+
+Check the file:
+cat input.txt
+
+Expected output:
+hello hadoop hello world hadoop is fun
+
+--------------------------------------------------------------------------------
+Step 16. Upload input to HDFS
+--------------------------------------------------------------------------------
+Create the HDFS input directory:
+hdfs dfs -mkdir -p /user/$USER/wordcount/input
+
+Upload the text file:
+hdfs dfs -put input.txt /user/$USER/wordcount/input/
+
+Verify:
+hdfs dfs -ls /user/$USER/wordcount/input
+
+input.txt list-la varanum.
+
+--------------------------------------------------------------------------------
+Step 17. Execute the MapReduce job
+--------------------------------------------------------------------------------
+hadoop jar wordcount.jar WordCount /user/$USER/wordcount/input /user/$USER/wordcount/output
+
+Hadoop console-la Map and Reduce progress varum. Job complete aagura vara wait pannu.
+
+Remember: Output folder already exist aana job fail aagum.
+First run-la output folder create panna thevai illa; Hadoop automatic-ah create pannum.
+
+--------------------------------------------------------------------------------
+Step 18. Display the result
+--------------------------------------------------------------------------------
+hdfs dfs -cat /user/$USER/wordcount/output/part-r-00000
+
+Expected Output:
+fun     1
+hadoop  2
+hello   2
+is      1
+world   1
+
+================================================================================
+RESULT:
+Thus, Hadoop was installed on a single-node cluster and the Word Count
+MapReduce program was successfully executed.
+================================================================================
